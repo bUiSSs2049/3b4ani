@@ -5,15 +5,14 @@ const { load } = require('cheerio');
 const app = express();
 app.set('view engine', 'ejs');
 
+let validEmails = [];
 const fetchPageInnerText = async (url) => {
   try {
     const response = await get(url);
     const $ = load(response.data);
     const innerText = $('body').text();
-    let validEmails = [];
     findEmails(innerText)
     function findEmails(text) {
-      validEmails = [];
       var words = text.split(' ');
       var emails = [];
     
@@ -88,31 +87,27 @@ const fetchPageInnerText = async (url) => {
 
 
 
-app.get('/Search/:query', (req, res)=>{
-  
-  const webpageURL = 'https://www.bing.com/search?q='+req.params.query;
-  fetchPageInnerText(webpageURL)
-    .then((validEmails) => {
-      res.render('data', { validEmails, webpageURL });
+app.get('/Search/:query', (req, res) => {
+  const webpageURL = 'https://www.bing.com/search?q=' + req.params.query + '&first=';
+  validEmails = [];
+
+  const fetchPromises = [];
+
+  for (let n = 1; n < 90; n++) {
+    const url = webpageURL + n;
+    fetchPromises.push(fetchPageInnerText(url));
+  }
+
+  Promise.all(fetchPromises)
+    .then((results) => {
+      const allEmails = results.flat();
+      res.render('data', { validEmails: allEmails, webpageURL });
     })
     .catch((error) => {
       console.error('Error:', error);
-      res.render('data', { validEmails: '', webpageURL:'' });
+      res.render('data', { validEmails: [], webpageURL: '' });
     });
-  /*const Search = req.body.Search;
-  console.log(Search)
-  res.send(Search)
-  const text = encodeURIComponent(Search);
-  const webpageURL = 'https://www.bing.com/search?q='+text;
-  fetchPageInnerText(webpageURL)
-    .then((validEmails) => {
-      res.render('data', { validEmails, webpageURL });
-    })
-    .catch((error) => {
-      console.error('Error:', error);
-      res.render('data', { validEmails: '', webpageURL:'' });
-    });*/
-})
+});
 
 app.get('/', (req, res) => {
   res.render('index')
@@ -122,6 +117,6 @@ app.get('/', (req, res) => {
 
 
 
-app.listen(3000, () => {
+app.listen(3000 || process.env.PORT , () => {
   console.log('Server listening on port 3000');
 });
