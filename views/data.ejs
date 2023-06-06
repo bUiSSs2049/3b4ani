@@ -7,7 +7,7 @@
   <h1>Search Results</h1>
   <ul>
 <%
-    const validEmails_ = validEmails
+    const validEmails_ = [...new Set(validEmails)];
     validEmails_.forEach(validEmail=>{
 %>
     <li><%= validEmail %></li>
