@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Search Results</title>
+</head>
+<body>
+  <h1>Search Results</h1>
+  <ul>
+<%
+    const validEmails_ = validEmails
+    validEmails_.forEach(validEmail=>{
+%>
+    <li><%= validEmail %></li>
+<%
+    })
+%>
+  </ul>
+</body>
+</html>
